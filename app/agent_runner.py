@@ -84,6 +84,8 @@ def _run_shell(cmd: str, cwd: str | None = None, timeout: int = 60) -> str:
         shell=True,
         env={**os.environ},
     )
+    if result.stderr:
+        logger.info("stderr: %s", result.stderr)
     if result.returncode != 0:
         raise RuntimeError(
             f"Shell command failed (rc={result.returncode}):\n"
@@ -177,12 +179,14 @@ async def run_agent(
             f"opencode run --model {shlex.quote(OPENAI_MODEL)}"
             f' "$(cat {shlex.quote(prompt_file)})"'
         )
-        await asyncio.to_thread(
+        logger.info("opencode command: %s", opencode_cmd)
+        opencode_output = await asyncio.to_thread(
             _run_shell,
             opencode_cmd,
             repo_path,
             OPENCODE_TIMEOUT,
         )
+        logger.info("opencode stdout:\n%s", opencode_output)
 
         # 6. Commit any changes
         status = _run(["git", "status", "--porcelain"], cwd=repo_path)

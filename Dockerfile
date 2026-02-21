@@ -6,13 +6,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     ca-certificates \
+    bash \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OpenCode CLI (official method)
-RUN curl -fsSL https://opencode.ai/install | sh
+# Install OpenCode CLI (must run with bash — installer uses [[ syntax)
+RUN curl -fsSL https://opencode.ai/install | bash \
+    && OPENCODE_BIN=$(find /root /usr/local -name "opencode" -type f 2>/dev/null | head -1) \
+    && echo "opencode binary found at: $OPENCODE_BIN" \
+    && test -n "$OPENCODE_BIN" \
+    && ln -sf "$OPENCODE_BIN" /usr/local/bin/opencode
 
 # Verify installation
-RUN opencode --version
+RUN /usr/local/bin/opencode --version
 
 WORKDIR /app
 

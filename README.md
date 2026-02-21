@@ -52,29 +52,103 @@ cp .env.example .env
 
 ## Usage
 
+### 1. Start the backend
+
+First time (builds the Docker image):
 ```bash
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:8000`.
+Subsequent runs (no rebuild needed unless code changes):
+```bash
+docker compose up
+```
 
-### Example request
+The API will be available at `http://localhost:8000`. Keep this terminal open — logs from the agent will appear here.
+
+---
+
+### 2. Send a fix request
+
+In a **second terminal**, use `test-fix.py` to send a request. First install the dependency if you haven't:
+
+```bash
+pip install requests
+```
+
+#### From PowerShell
+
+Without image:
+```powershell
+python test-fix.py --repo "https://github.com/owner/repo" --prompt "Describe the change you want here"
+```
+
+With image:
+```powershell
+python test-fix.py --repo "https://github.com/owner/repo" --prompt "Describe the change you want here" --image "C:\path\to\screenshot.jpg"
+```
+
+#### From WSL / bash
+
+Without image:
+```bash
+python test-fix.py --repo "https://github.com/owner/repo" --prompt "Describe the change you want here"
+```
+
+With image:
+```bash
+python test-fix.py --repo "https://github.com/owner/repo" --prompt "Describe the change you want here" --image "/mnt/c/path/to/screenshot.jpg"
+```
+
+> **Tip:** The more specific the prompt, the better. Include the file name, current text, and what you want to change. Example:
+> `"In index.html, change the page title from 'My App' to 'My Awesome App'"`
+
+#### Using curl directly
 
 ```bash
 curl -X POST http://localhost:8000/fix \
   -F "repo_url=https://github.com/owner/repo" \
-  -F "bug_description=Fix the NullPointerException in UserService.getById()" \
-  -F "image=@screenshot.png"
+  -F "bug_description=Describe the change you want here" \
+  -F "image=@/path/to/screenshot.jpg"
 ```
 
-### Example response
+---
 
+### 3. Check the result
+
+**Successful response:**
 ```json
 {
   "status": "ok",
   "pr_url": "https://github.com/owner/repo/pull/42",
   "branch": "auto/fix-1740000000"
 }
+```
+
+**No changes detected** (OpenCode ran but didn't modify anything — refine your prompt):
+```json
+{
+  "status": "no_changes",
+  "branch": "auto/fix-1740000000"
+}
+```
+
+---
+
+### Model configuration
+
+OpenCode requires the `provider/model` format in `OPENAI_MODEL`. Examples:
+
+| `.env` value | Description |
+|---|---|
+| `openai/gpt-4o` | GPT-4o (default) |
+| `openai/gpt-4o-mini` | Faster, cheaper |
+| `openai/gpt-5.2-codex` | Codex model |
+| `anthropic/claude-3-5-sonnet` | Claude (requires `ANTHROPIC_API_KEY`) |
+
+After changing `.env`, restart without rebuild:
+```bash
+docker compose down && docker compose up
 ```
 
 ## API
