@@ -11,6 +11,7 @@ import sys
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.agent_runner import run_agent
@@ -28,6 +29,13 @@ app = FastAPI(
     title="Codex Agent",
     description="Autonomous AI-powered GitHub code-fixing agent.",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow file:// and any localhost port
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

@@ -170,7 +170,7 @@ async def run_agent(
 
         image_flag = ""
         if image_bytes:
-            image_file = os.path.join(workspace, "screenshot.jpg")
+            image_file = os.path.join(repo_path, ".codex_screenshot.jpg")
             with open(image_file, "wb") as fh:
                 fh.write(image_bytes)
             image_flag = f"-f {shlex.quote(image_file)}"
@@ -192,6 +192,11 @@ async def run_agent(
         logger.info("opencode stdout:\n%s", opencode_output)
 
         # 6. Commit any changes
+        # Remove screenshot before staging to avoid committing it
+        screenshot = os.path.join(repo_path, ".codex_screenshot.jpg")
+        if os.path.exists(screenshot):
+            os.remove(screenshot)
+
         status = _run(["git", "status", "--porcelain"], cwd=repo_path)
         if not status:
             logger.warning("opencode produced no file changes — nothing to commit")
