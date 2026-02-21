@@ -7,7 +7,6 @@ Orchestrates: clone → branch → opencode → commit → push → PR.
 from __future__ import annotations
 
 import asyncio
-import base64
 import logging
 import os
 import re
@@ -159,26 +158,30 @@ async def run_agent(
         _run(["git", "checkout", "-b", branch], cwd=repo_path)
         logger.info("branch=%s", branch)
 
-        # 4. Build prompt
+        # 4. Build prompt (image is passed separately as a file, not embedded)
         prompt = bug_description
-        if image_bytes:
-            b64 = base64.b64encode(image_bytes).decode()
-            prompt += (
-                f"\n\n[Screenshot evidence — base64 encoded]:\n{b64}"
-            )
 
         # 5. Run OpenCode CLI.
-        # Write the prompt to a file to avoid exec ARG_MAX limits when
-        # base64 image payloads are large, then feed it via shell expansion.
+        # Write the prompt to a file to avoid exec ARG_MAX limits.
+        # If an image was provided, save it to a file and pass via --image flag.
         prompt_file = os.path.join(workspace, "prompt.txt")
         with open(prompt_file, "w", encoding="utf-8") as fh:
             fh.write(prompt)
+
+        image_flag = ""
+        if image_bytes:
+            image_file = os.path.join(workspace, "screenshot.jpg")
+            with open(image_file, "wb") as fh:
+                fh.write(image_bytes)
+            image_flag = f"-f {shlex.quote(image_file)}"
+            logger.info("image saved to %s (%d bytes)", image_file, len(image_bytes))
 
         logger.info("running opencode …")
         opencode_cmd = (
             f"opencode run --model {shlex.quote(OPENAI_MODEL)}"
             f' "$(cat {shlex.quote(prompt_file)})"'
-        )
+            f" {image_flag}"
+        ).strip()
         logger.info("opencode command: %s", opencode_cmd)
         opencode_output = await asyncio.to_thread(
             _run_shell,

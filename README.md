@@ -42,7 +42,7 @@ cp .env.example .env
 |---|---|---|---|
 | `OPENAI_API_KEY` | ✅ | — | OpenAI API key |
 | `GITHUB_TOKEN` | ✅ | — | GitHub token (repo + PR scope) |
-| `OPENAI_MODEL` | | `gpt-4o` | Model passed to OpenCode |
+| `OPENAI_MODEL` | | `openai/gpt-5.2-codex` | Model passed to OpenCode (format: `provider/model`) |
 | `GIT_AUTHOR_NAME` | | `codex-agent` | Commit author name |
 | `GIT_AUTHOR_EMAIL` | | `codex-agent@example.com` | Commit author email |
 | `MAX_REPO_SIZE_MB` | | `500` | Repo size safety limit |
@@ -141,9 +141,9 @@ OpenCode requires the `provider/model` format in `OPENAI_MODEL`. Examples:
 
 | `.env` value | Description |
 |---|---|
-| `openai/gpt-4o` | GPT-4o (default) |
+| `openai/gpt-5.2-codex` | GPT-5.2 Codex — recommended, supports vision + code generation |
+| `openai/gpt-4o` | GPT-4o |
 | `openai/gpt-4o-mini` | Faster, cheaper |
-| `openai/gpt-5.2-codex` | Codex model |
 | `anthropic/claude-3-5-sonnet` | Claude (requires `ANTHROPIC_API_KEY`) |
 
 After changing `.env`, restart without rebuild:
